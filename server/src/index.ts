@@ -15,12 +15,12 @@ const app = new Hono();
 app.post('/api/auth/register', async c => {
   const body = await c.req.json().catch(() => ({}));
   const r = register(String(body.name ?? ''), String(body.password ?? ''));
-  return r.error ? c.json({ error: r.error }, 400) : c.json(r);
+  return 'error' in r ? c.json({ error: r.error }, 400) : c.json(r);
 });
 app.post('/api/auth/login', async c => {
   const body = await c.req.json().catch(() => ({}));
   const r = login(String(body.name ?? ''), String(body.password ?? ''));
-  return r.error ? c.json({ error: r.error }, 401) : c.json(r);
+  return 'error' in r ? c.json({ error: r.error }, 401) : c.json(r);
 });
 app.get('/api/auth/me', c => {
   const u = userFromAuthHeader(c.req.header('authorization'));
@@ -35,28 +35,32 @@ app.post('/api/rooms', async c => {
   if (!u) return c.json({ error: 'unauthorized' }, 401);
   const body = await c.req.json().catch(() => ({}));
   const r = createRoom(u.sub, String(body.name ?? ''), String(body.gameId ?? ''));
-  return r.error ? c.json({ error: r.error }, 400) : c.json(r);
+  return 'error' in r ? c.json({ error: r.error }, 400) : c.json(r);
 });
 app.post('/api/rooms/:id/join', c => {
   const u = userFromAuthHeader(c.req.header('authorization'));
   if (!u) return c.json({ error: 'unauthorized' }, 401);
   const r = joinRoom(u.sub, c.req.param('id'));
-  return r.error ? c.json({ error: r.error }, 400) : c.json(r);
+  return 'error' in r ? c.json({ error: r.error }, 400) : c.json(r);
 });
 app.post('/api/rooms/:id/leave', c => {
   const u = userFromAuthHeader(c.req.header('authorization'));
   if (!u) return c.json({ error: 'unauthorized' }, 401);
   const r = leaveRoom(u.sub, c.req.param('id'));
-  return r.error ? c.json({ error: r.error }, 400) : c.json({ ok: true });
+  return 'error' in r ? c.json({ error: r.error }, 400) : c.json({ ok: true });
 });
 app.post('/api/rooms/:id/status', async c => {
   const u = userFromAuthHeader(c.req.header('authorization'));
   if (!u) return c.json({ error: 'unauthorized' }, 401);
   const body = await c.req.json().catch(() => ({}));
   const r = setRoomStatus(u.sub, c.req.param('id'), body.status);
-  return r.error ? c.json({ error: r.error }, 400) : c.json(r);
+  return 'error' in r ? c.json({ error: r.error }, 400) : c.json(r);
 });
 app.get('/healthz', c => c.json({ ok: true }));
+
+// ---- 游戏客户端静态托管（GAMES 目录挂载 RDS-Board-Core 构建产物 dist/ → /games/rds-board-core/） ----
+// 生产 compose 卷：./rds-board-core-dist:/app/games/rds-board-core
+app.use('/games/*', serveStatic({ root: '../games' }));
 
 // ---- 静态大厅（生产：web/dist；开发：vite 独立端口） ----
 app.use('/*', serveStatic({ root: '../web/dist' }));
