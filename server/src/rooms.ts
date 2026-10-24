@@ -14,6 +14,12 @@ function toInfo(r: NonNullable<ReturnType<typeof rooms.byId>>): HubRoomInfo {
   };
 }
 
+export function getRoomInfo(roomId: string): HubRoomInfo | { error: string } {
+  const r = rooms.byId(roomId);
+  if (!r) return { error: '房间不存在' };
+  return toInfo(r);
+}
+
 export function listRooms(): HubRoomInfo[] {
   return rooms.all().filter(r => r.status !== 'closed').map(toInfo);
 }

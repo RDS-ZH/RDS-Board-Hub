@@ -5,7 +5,7 @@ import { WebSocketServer } from 'ws';
 import http from 'node:http';
 import { PORT } from './config.ts';
 import { register, login, userFromAuthHeader } from './auth.ts';
-import { listRooms, createRoom, joinRoom, leaveRoom, setRoomStatus } from './rooms.ts';
+import { listRooms, createRoom, joinRoom, leaveRoom, setRoomStatus, getRoomInfo } from './rooms.ts';
 import { GAMES } from './games.ts';
 import { SignalHub } from './signal.ts';
 
@@ -36,6 +36,12 @@ app.post('/api/rooms', async c => {
   const body = await c.req.json().catch(() => ({}));
   const r = createRoom(u.sub, String(body.name ?? ''), String(body.gameId ?? ''));
   return 'error' in r ? c.json({ error: r.error }, 400) : c.json(r);
+});
+app.get('/api/rooms/:id', c => {
+  const u = userFromAuthHeader(c.req.header('authorization'));
+  if (!u) return c.json({ error: '未登录' }, 401);
+  const r = getRoomInfo(c.req.param('id'));
+  return 'error' in r ? c.json({ error: r.error }, 404) : c.json(r);
 });
 app.post('/api/rooms/:id/join', c => {
   const u = userFromAuthHeader(c.req.header('authorization'));
