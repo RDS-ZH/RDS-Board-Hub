@@ -1,0 +1,11 @@
+services:
+  hub:
+    build: .
+    ports: ["8787:8787"]
+    environment:
+      - HUB_SECRET=${HUB_SECRET:?set HUB_SECRET}
+      - PORT=8787
+    volumes: ["hub-data:/app/server/data"]
+    restart: unless-stopped
+volumes:
+  hub-data:
