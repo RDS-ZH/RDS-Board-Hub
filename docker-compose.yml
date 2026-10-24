@@ -5,7 +5,10 @@ services:
     environment:
       - HUB_SECRET=${HUB_SECRET:?set HUB_SECRET}
       - PORT=8787
-    volumes: ["hub-data:/app/server/data"]
+    volumes:
+      - "hub-data:/app/server/data"
+      # 游戏客户端：把 RDS-Board-Core 的 dist/ 挂载进来，经 /games/rds-board-core/ 提供
+      - "./rds-board-core-dist:/app/games/rds-board-core:ro"
     restart: unless-stopped
 volumes:
   hub-data:
