@@ -66,7 +66,11 @@ app.get('/healthz', c => c.json({ ok: true }));
 
 // ---- 游戏客户端静态托管（GAMES 目录挂载 RDS-Board-Core 构建产物 dist/ → /games/rds-board-core/） ----
 // 生产 compose 卷：./rds-board-core-dist:/app/games/rds-board-core
-app.use('/games/*', serveStatic({ root: '../games' }));
+app.use('/games/*', serveStatic({
+  root: '../games',
+  // 剥离 /games 前缀：serveStatic 以完整请求路径拼 root，不剥离会映射到 /app/games/games/... 而落到大厅 SPA fallback
+  rewriteRequestPath: p => p.replace(/^\/games/, ''),
+}));
 
 // ---- 静态大厅（生产：web/dist；开发：vite 独立端口） ----
 app.use('/*', serveStatic({ root: '../web/dist' }));
